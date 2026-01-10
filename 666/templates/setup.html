@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}首次安装 | ForestNav{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 bg-[#111b17]/80 border border-white/5 rounded-3xl p-8 shadow-2xl backdrop-blur-md">
+    <div class="space-y-2">
+        <p class="text-sm uppercase tracking-[0.5em] text-green-400">快速安装</p>
+        <h1 class="text-3xl font-bold text-white">欢迎使用 ForestNav</h1>
+        <p class="text-gray-300">首次访问将引导你完成管理员账号与数据库连接设置，类似于 WordPress 的五分钟安装。</p>
+    </div>
+
+    <form method="post" class="space-y-6">
+        <div class="space-y-2">
+            <h2 class="text-xl font-semibold text-white">1. 管理员账户</h2>
+            <p class="text-sm text-gray-400">完成后即可直接登录后台。</p>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <label class="flex flex-col text-gray-200 text-sm">
+                    管理员用户名
+                    <input name="admin_username" value="{{ form_data.admin_username }}" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" required>
+                </label>
+                <label class="flex flex-col text-gray-200 text-sm">
+                    管理员密码
+                    <input name="admin_password" type="password" placeholder="至少 8 位" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" required>
+                </label>
+            </div>
+        </div>
+
+        <div class="space-y-2">
+            <h2 class="text-xl font-semibold text-white">2. 密钥与安全</h2>
+            <p class="text-sm text-gray-400">设置 `SECRET_KEY` 可以保护登录会话，留空将采用默认开发密钥（不推荐）。</p>
+            <input name="secret_key" value="{{ form_data.secret_key }}" class="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="可选，建议填写复杂字符串">
+        </div>
+
+        <div class="space-y-2">
+            <h2 class="text-xl font-semibold text-white">3. 数据库连接</h2>
+            <p class="text-sm text-gray-400">支持 SQLite（默认）或 MySQL；填写自定义连接字符串也可。</p>
+            <label class="flex flex-col space-y-2 text-gray-200 text-sm">
+                选择数据库类型
+                <select name="db_engine" class="rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400">
+                    <option value="sqlite" {% if form_data.db_engine == 'sqlite' %}selected{% endif %}>SQLite（本地文件）</option>
+                    <option value="mysql" {% if form_data.db_engine == 'mysql' %}selected{% endif %}>MySQL（远程）</option>
+                </select>
+            </label>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <label class="flex flex-col text-gray-200 text-sm">
+                    SQLite 文件名
+                    <input name="sqlite_file" value="{{ form_data.sqlite_file }}" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="例如 app.db">
+                </label>
+                <label class="flex flex-col text-gray-200 text-sm">
+                    自定义连接字符串
+                    <input name="custom_database_url" value="{{ form_data.custom_database_url }}" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="如 mysql+pymysql://user:pass@host:3306/db">
+                </label>
+            </div>
+
+            <div class="grid gap-4 md:grid-cols-2">
+                <label class="flex flex-col text-gray-200 text-sm">
+                    MySQL 主机
+                    <input name="mysql_host" value="{{ form_data.mysql_host }}" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="localhost">
+                </label>
+                <label class="flex flex-col text-gray-200 text-sm">
+                    MySQL 端口
+                    <input name="mysql_port" value="{{ form_data.mysql_port }}" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="3306">
+                </label>
+                <label class="flex flex-col text-gray-200 text-sm">
+                    MySQL 用户名
+                    <input name="mysql_user" value="{{ form_data.mysql_user }}" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="db_user">
+                </label>
+                <label class="flex flex-col text-gray-200 text-sm">
+                    MySQL 密码
+                    <input name="mysql_password" type="password" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="db 密码">
+                </label>
+                <label class="flex flex-col text-gray-200 text-sm">
+                    MySQL 数据库名
+                    <input name="mysql_database" value="{{ form_data.mysql_database }}" class="mt-2 rounded-xl border border-white/10 bg-black/40 px-3 py-2 focus:outline-none focus:border-green-400" placeholder="forestnav">
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full rounded-2xl bg-gradient-to-r from-green-400 to-emerald-500 px-6 py-3 text-lg font-semibold uppercase tracking-wide text-[#041b18] shadow-xl shadow-green-400/40 transition hover:brightness-110">完成安装</button>
+    </form>
+</div>
+{% endblock %}

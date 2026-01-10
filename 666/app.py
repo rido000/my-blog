@@ -1,15 +1,113 @@
+import os
+from urllib.parse import quote_plus
+
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from config import Config
+from config import Config, read_setup_config, write_setup_config
 from models import db, User, Link, Category, SiteConfig
 from datetime import datetime
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
+def apply_config(config_data: dict, reinit_db=False):
+    if not config_data:
+        app.config.setdefault('SETUP_COMPLETED', False)
+        return {}
+
+    secret_key = config_data.get('secret_key')
+    if secret_key:
+        app.config['SECRET_KEY'] = secret_key
+
+    database_url = config_data.get('database_url')
+    if database_url:
+        current_db = app.config.get('SQLALCHEMY_DATABASE_URI')
+        if database_url != current_db:
+            app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+            if reinit_db:
+                try:
+                    db.session.remove()
+                except Exception:
+                    pass
+                try:
+                    db.engine.dispose()
+                except Exception:
+                    pass
+                db.init_app(app)
+
+    app.config['SETUP_COMPLETED'] = bool(config_data.get('setup_completed'))
+    return config_data
+
+
+def apply_saved_setup(reinit_db=False):
+    return apply_config(read_setup_config(), reinit_db=reinit_db)
+
+
+apply_saved_setup()
 db.init_app(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+
+DEFAULT_CATEGORIES = [
+    ("常用工具", 1),
+    ("学习资源", 2),
+    ("娱乐休闲", 3),
+]
+
+
+def ensure_default_categories():
+    for name, order in DEFAULT_CATEGORIES:
+        if not Category.query.filter_by(name=name).first():
+            category = Category(name=name, order=order)
+            db.session.add(category)
+
+
+def is_setup_completed():
+    return bool(read_setup_config().get('setup_completed'))
+
+
+def get_setup_form_defaults():
+    defaults = {
+        'admin_username': 'admin',
+        'db_engine': 'sqlite',
+        'sqlite_file': 'app.db',
+        'mysql_host': 'localhost',
+        'mysql_port': '3306',
+        'mysql_user': 'root',
+        'mysql_database': 'forestnav',
+        'custom_database_url': '',
+        'secret_key': ''
+    }
+    saved_db = read_setup_config().get('database_url')
+    if saved_db:
+        defaults['custom_database_url'] = saved_db
+        defaults['db_engine'] = 'mysql' if saved_db.startswith('mysql') else 'sqlite'
+    return defaults
+
+
+def build_database_url(form_data: dict, mysql_password: str = ''):
+    custom_url = (form_data.get('custom_database_url') or '').strip()
+    if custom_url:
+        return custom_url
+
+    db_engine = form_data.get('db_engine', 'sqlite')
+    if db_engine == 'mysql':
+        host = (form_data.get('mysql_host') or 'localhost').strip() or 'localhost'
+        port = (form_data.get('mysql_port') or '3306').strip() or '3306'
+        user = (form_data.get('mysql_user') or 'root').strip() or 'root'
+        password = mysql_password or ''
+        database = (form_data.get('mysql_database') or 'forestnav').strip() or 'forestnav'
+        if not database:
+            raise ValueError('MySQL 数据库名称必填。')
+        return f"mysql+pymysql://{quote_plus(user)}:{quote_plus(password)}@{host}:{port}/{database}"
+
+    sqlite_file = (form_data.get('sqlite_file') or 'app.db').strip() or 'app.db'
+    sqlite_path = os.path.join(BASE_DIR, sqlite_file)
+    return f"sqlite:///{sqlite_path}"
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -54,15 +152,77 @@ def init_db_command():
             db.session.add(user)
             
             # Default Categories
-            c1 = Category(name="常用工具", order=1)
-            c2 = Category(name="学习资源", order=2)
-            c3 = Category(name="娱乐休闲", order=3)
-            db.session.add_all([c1, c2, c3])
+            ensure_default_categories()
             
             db.session.commit()
             print("Initialized database with default admin user (admin/admin).")
         else:
             print("Database already initialized.")
+
+
+@app.route('/rd/setup', methods=['GET', 'POST'])
+def setup():
+    if is_setup_completed():
+        return redirect(url_for('login'))
+
+    form_data = get_setup_form_defaults()
+    if request.method == 'POST':
+        for key in form_data:
+            form_data[key] = request.form.get(key, form_data[key])
+
+        admin_username = form_data.get('admin_username', 'admin').strip()
+        admin_password = request.form.get('admin_password', '')
+        secret_key = form_data.get('secret_key', '').strip()
+        mysql_password = request.form.get('mysql_password', '')
+
+        if not admin_username or not admin_password:
+            flash('请填写管理员用户名和密码。', 'error')
+            return render_template('setup.html', form_data=form_data)
+
+        if len(admin_password) < 8:
+            flash('管理员密码至少 8 位。', 'error')
+            return render_template('setup.html', form_data=form_data)
+
+        try:
+            database_url = build_database_url(form_data, mysql_password=mysql_password)
+        except ValueError as exc:
+            flash(str(exc), 'error')
+            return render_template('setup.html', form_data=form_data)
+
+        temp_secret = secret_key or app.config.get('SECRET_KEY') or Config.SECRET_KEY
+        try:
+            apply_config({
+                'secret_key': temp_secret,
+                'database_url': database_url,
+                'setup_completed': False
+            }, reinit_db=True)
+
+            with app.app_context():
+                db.create_all()
+                ensure_default_categories()
+                existing_admin = User.query.filter_by(username=admin_username).first()
+                if not existing_admin:
+                    admin_user = User(username=admin_username)
+                    admin_user.set_password(admin_password)
+                    db.session.add(admin_user)
+                else:
+                    existing_admin.set_password(admin_password)
+                db.session.commit()
+        except Exception as exc:
+            apply_saved_setup(reinit_db=True)
+            flash(f'初始化失败：{exc}', 'error')
+            return render_template('setup.html', form_data=form_data)
+
+        write_setup_config({
+            'secret_key': temp_secret,
+            'database_url': database_url,
+            'setup_completed': True
+        })
+        apply_saved_setup(reinit_db=True)
+        flash('安装完成，请使用管理员账户登录。', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('setup.html', form_data=form_data)
 
 @app.route('/')
 def index():
@@ -103,6 +263,9 @@ def visit_link(link_id):
 
 @app.route('/rd/login', methods=['GET', 'POST'])
 def login():
+    if not is_setup_completed():
+        return redirect(url_for('setup'))
+
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
@@ -221,6 +384,7 @@ def delete_category(id):
     db.session.commit()
     flash('分类已删除', 'success')
     return redirect(url_for('dashboard'))
+
 @app.route('/settings/update', methods=['POST'])
 @login_required
 def update_settings():
