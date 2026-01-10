@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Bento Hero Layout (Moved to Top & Centered Text) -->
+    <div class="mb-4">
+        <!-- 1. Profile / Intro Card (Full Width with Customizable Background) -->
+        <!-- Search Hint (Top Right) -->
+        <div id="searchHintBtn" class="absolute top-6 right-6 z-50 cursor-pointer hidden md:block hover:scale-110 transition-transform active:scale-95 shadow-xl" title="点击搜索">
+            <div class="flex items-center gap-2 text-gray-200 bg-[#1a2f26] px-3 py-1.5 rounded-lg border border-green-500/30 text-xs font-mono">
+                <span class="w-5 h-5 rounded border border-white/20 flex items-center justify-center text-[10px] bg-black/20">S</span>
+                <span>键搜索</span>
+            </div>
+        </div>
+
+        <div class="relative w-full min-h-[300px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 group">
+             
+             <!-- Customizable Background Layer (Easy to modify) -->
+             <!-- 这里的图片可以替换为你想要的任何背景图 -->
+             <div class="absolute inset-0">
+                 <img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=2000&auto=format&fit=crop" 
+                      class="w-full h-full object-cover opacity-40 transition-transform duration-1000 group-hover:scale-105 filter saturate-50 group-hover:saturate-100" 
+                      alt="Hero Background">
+                 <!-- Gradient Overlay (Ensures text readability) -->
+                 <div class="absolute inset-0 bg-gradient-to-r from-[#0f1f1a] via-[#0f1f1a]/80 to-transparent"></div>
+                 <!-- Centered Gradient for centered text layout -->
+                 <div class="absolute inset-0 bg-gradient-to-t from-[#0f1f1a] via-transparent to-transparent opacity-80"></div>
+             </div>
+
+             <!-- Content (Centered) -->
+             <div class="relative z-10 p-10 md:p-16 flex flex-col justify-center items-center h-full text-center">
+                <h1 class="text-5xl md:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-400 mb-6 tracking-tight drop-shadow-lg">
+                    {{ site_title }}
+                </h1>
+                <p class="text-gray-100 text-xl leading-relaxed max-w-4xl drop-shadow-md mx-auto mb-10">
+                    {{ site_description }}
+                </p>
+                
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap justify-center gap-4">
+                    <a href="{{ site_tutorial_url }}" target="_blank" class="group px-8 py-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all duration-300 text-white font-medium flex items-center gap-2 hover:scale-105 hover:shadow-lg hover:shadow-green-500/20">
+                        <i class="fas fa-book-open text-green-400 group-hover:text-green-300"></i> 
+                        <span>使用教程</span>
+                    </a>
+                    <a href="{{ site_youtube_url }}" target="_blank" class="group px-8 py-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all duration-300 text-white font-medium flex items-center gap-2 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20">
+                        <i class="fab fa-youtube text-red-500 group-hover:text-red-400"></i> 
+                        <span>我的 YouTube</span>
+                    </a>
+                    <a href="{{ site_github_url }}" target="_blank" class="group px-8 py-3 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all duration-300 text-white font-medium flex items-center gap-2 hover:scale-105 hover:shadow-lg hover:shadow-gray-500/20">
+                        <i class="fab fa-github text-white group-hover:text-gray-300"></i> 
+                        <span>我的 GitHub</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Pills (Framer-style Segmented Control) -->
+    <div class="w-full mb-8 overflow-x-auto pb-4 scrollbar-hide">
+        <div class="flex flex-nowrap md:flex-wrap gap-3 justify-center">
+            {% for category in categories %}
+            <a href="#cat-{{ category.id }}" class="group relative px-6 py-3 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-2xl text-sm font-bold text-gray-300 hover:text-white border border-white/5 hover:border-white/20 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-green-500/50 group-hover:bg-green-400 transition-colors"></span>
+                {{ category.name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Links Grid -->
+    <div class="relative min-h-[400px]">
+        {% for category in categories %}
+        <div id="cat-{{ category.id }}" class="category-section absolute inset-0 w-full transition-opacity duration-500 ease-in-out opacity-0 z-0 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for link in category.links %}
+                <a href="{{ url_for('visit_link', link_id=link.id) }}" target="_blank" rel="noopener noreferrer" 
+                   class="group block bg-white/5 hover:bg-white/10 backdrop-blur-xl rounded-2xl p-5 border border-white/5 hover:border-green-500/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col h-full"
+                   title="{{ link.description }}">
+                   
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform duration-300">
+                             <i class="{{ link.icon or 'fas fa-globe' }} text-2xl text-green-400 group-hover:text-green-300"></i>
+                        </div>
+                        <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <i class="fas fa-arrow-up-right-from-square text-white/30"></i>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto">
+                        <h3 class="text-lg font-bold text-gray-100 group-hover:text-white mb-1 truncate">{{ link.title }}</h3>
+                        <p class="text-sm text-gray-400 line-clamp-2 leading-relaxed">{{ link.description or '暂无描述' }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            
+            {% if not category.links.count() %}
+                <p class="text-gray-400 text-center mt-10">此分类下暂无内容</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+    <!-- Full Screen Search Overlay -->
+    <!-- Modified: Top placement (items-start + pt-20), lighter blur (backdrop-blur-sm), lighter dark overlay (bg-black/40) -->
+    <div id="searchOverlay" class="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm hidden flex items-start justify-center pt-20 transition-all duration-300 opacity-0">
+        <div class="w-full max-w-3xl px-6 transform transition-all duration-300 scale-95 origin-top" id="searchContainer">
+            <div class="relative shadow-2xl rounded-2xl">
+                <i class="fas fa-search absolute left-6 top-1/2 -translate-y-1/2 text-2xl text-gray-400"></i>
+                <!-- Made background solid (bg-gray-900) instead of transparent -->
+                <input type="text" id="globalSearchInput" placeholder="搜索工具..." 
+                       class="w-full bg-[#1a2f26] border border-green-500/30 rounded-2xl py-6 pl-20 pr-6 text-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-2xl">
+                <div class="absolute right-6 top-1/2 -translate-y-1/2">
+                    <span class="text-xs text-gray-500 border border-white/10 px-2 py-1 rounded">ESC</span>
+                </div>
+            </div>
+            
+            <!-- Search Results Container -->
+            <div id="searchResults" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20">
+                <!-- Results will be injected here -->
+            </div>
+            
+            <div class="mt-8 text-center text-gray-500 text-sm">
+                按 <span class="text-gray-300">回车</span> 键打开第一个结果
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Categories Logic (Hover Show / Leave Hide) ---
+        const triggers = document.querySelectorAll('a[href^="#cat-"]');
+        const sections = document.querySelectorAll('.category-section');
+        const linksContainer = document.querySelector('.relative.min-h-\\[400px\\]'); 
+        let activeSectionId = null;
+
+        function showSection(targetId) {
+            sections.forEach(sec => {
+                sec.classList.remove('opacity-100', 'z-10');
+                sec.classList.add('opacity-0', 'z-0');
+                sec.classList.add('hidden'); // Ensure hidden is applied for layout
+            });
+
+            const target = document.getElementById(targetId);
+            if(target) {
+                target.classList.remove('hidden');
+                // Small delay to allow display:block to render
+                setTimeout(() => {
+                    target.classList.remove('opacity-0', 'z-0');
+                    target.classList.add('opacity-100', 'z-10');
+                }, 10);
+                activeSectionId = targetId;
+            }
+        }
+
+        triggers.forEach(trigger => {
+            trigger.addEventListener('mouseenter', function(e) {
+                const targetId = this.getAttribute('href').substring(1);
+                showSection(targetId);
+            });
+        });
+
+        // Hide when mouse leaves the link grid area
+        if(linksContainer) {
+            linksContainer.addEventListener('mouseleave', function() {
+                // Fade out all sections
+                sections.forEach(sec => {
+                    sec.classList.remove('opacity-100', 'z-10');
+                    sec.classList.add('opacity-0', 'z-0');
+                    setTimeout(() => {
+                        if(!sec.classList.contains('opacity-100')) {
+                            sec.classList.add('hidden');
+                        }
+                    }, 300);
+                });
+                activeSectionId = null;
+            });
+        }
+
+        // --- Global Search Logic ('S' Key) ---
+        const overlay = document.getElementById('searchOverlay');
+        const container = document.getElementById('searchContainer');
+        const input = document.getElementById('globalSearchInput');
+        const resultsContainer = document.getElementById('searchResults');
+        const hintBtn = document.getElementById('searchHintBtn');
+        
+        // Collect all links for search indexing
+        const allLinks = [];
+        document.querySelectorAll('.category-section a.group').forEach(link => {
+            const title = link.querySelector('h3')?.textContent || '';
+            const desc = link.querySelector('p.text-sm')?.textContent || '';
+            allLinks.push({
+                element: link, // Store reference to original element
+                url: link.href,
+                title: title,
+                desc: desc,
+                iconClass: link.querySelector('i')?.className || 'fas fa-globe',
+                searchText: (title + ' ' + desc).toLowerCase()
+            });
+        });
+
+        function toggleSearch(show) {
+            if (show) {
+                overlay.classList.remove('hidden');
+                // Use double RAF to ensure transition happens after display:block
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        overlay.classList.remove('opacity-0');
+                        container.classList.remove('scale-95');
+                        input.focus();
+                    });
+                });
+            } else {
+                overlay.classList.add('opacity-0');
+                container.classList.add('scale-95');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    input.value = '';
+                    resultsContainer.innerHTML = ''; // Clear results
+                }, 300);
+            }
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Open on 's' or 'S' if not typing in an input
+            if ((e.key === 's' || e.key === 'S') && 
+                document.activeElement.tagName !== 'INPUT' && 
+                document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                toggleSearch(true);
+            }
+            // Close on Escape
+            if (e.key === 'Escape') {
+                toggleSearch(false);
+            }
+        });
+
+        // Click on hint button
+        if(hintBtn) {
+            hintBtn.addEventListener('click', function() {
+                toggleSearch(true);
+            });
+        }
+
+        // Search Input Logic
+        input.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            resultsContainer.innerHTML = '';
+            
+            if (!term) return;
+
+            const matches = allLinks.filter(item => item.searchText.includes(term)).slice(0, 6); // Limit to 6 results
+            
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">未找到相关工具。</div>';
+                return;
+            }
+
+            matches.forEach(item => {
+                // Clone the link style for results, but simpler
+                const el = document.createElement('a');
+                el.href = item.url;
+                el.target = '_blank';
+                el.className = 'flex items-center gap-4 bg-white/10 p-4 rounded-xl hover:bg-green-500/20 transition-colors border border-white/5';
+                el.innerHTML = `
+                    <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-green-400">
+                        <i class="${item.iconClass}"></i>
+                    </div>
+                    <div>
+                        <div class="text-white font-bold">${item.title}</div>
+                        <div class="text-xs text-gray-400 line-clamp-1">${item.desc}</div>
+                    </div>
+                `;
+                resultsContainer.appendChild(el);
+            });
+        });
+
+        // Close when clicking outside
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                toggleSearch(false);
+            }
+        });
+    });
+</script>
+{% endblock %}

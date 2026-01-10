@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">管理后台</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Add Link Form -->
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white/90 backdrop-blur-md shadow-lg rounded-xl p-6 sticky top-6 border border-white/50">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">添加新链接</h3>
+                <form action="{{ url_for('add_link') }}" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">标题</label>
+                        <input type="text" name="title" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">URL</label>
+                        <input type="url" name="url" required class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">描述</label>
+                        <input type="text" name="description" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">图标样式 (FontAwesome)</label>
+                        <input type="text" name="icon" placeholder="留空则自动根据 URL 识别" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                        <p class="text-xs text-gray-500 mt-1">例如: fas fa-code, fab fa-github。留空将尝试自动匹配常用网站图标。</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">分类</label>
+                        <div class="flex gap-2">
+                            <select name="category_id" class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition shadow-md">添加链接</button>
+                </form>
+
+                <h3 class="text-lg font-bold text-gray-900 mt-8 mb-4 border-b pb-2 bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">添加分类</h3>
+                <form action="{{ url_for('add_category') }}" method="POST" class="space-y-4">
+                    <div>
+                        <input type="text" name="name" placeholder="新分类名称" required class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <button type="submit" class="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition shadow-md">添加分类</button>
+                </form>
+
+                <h3 class="text-lg font-bold text-gray-900 mt-8 mb-4 border-b pb-2 bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">站点设置</h3>
+                <form action="{{ url_for('update_settings') }}" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">站点名称 (Brand)</label>
+                        <input type="text" name="site_brand" value="{{ site_brand }}" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">主页大标题 (Title)</label>
+                        <input type="text" name="site_title" value="{{ site_title }}" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">主页介绍语 (Description)</label>
+                        <textarea name="site_description" rows="3" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">{{ site_description }}</textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">教程链接</label>
+                            <input type="text" name="site_tutorial_url" value="{{ site_tutorial_url }}" placeholder="#" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">YouTube 链接</label>
+                            <input type="text" name="site_youtube_url" value="{{ site_youtube_url }}" placeholder="https://youtube.com/..." class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-sm font-medium text-gray-700">GitHub 链接</label>
+                            <input type="text" name="site_github_url" value="{{ site_github_url }}" placeholder="https://github.com/..." class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">联系邮箱</label>
+                        <input type="email" name="contact_email" value="{{ contact_email }}" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 transition shadow-md">更新设置</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- content list -->
+        <div class="lg:col-span-2 space-y-6">
+            {% for category in categories %}
+            <div class="bg-white/90 backdrop-blur-md shadow-lg rounded-xl overflow-hidden border border-white/50">
+                <div class="bg-gray-50/50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-gray-800">{{ category.name }}</h3>
+                    <form action="{{ url_for('delete_category', id=category.id) }}" method="POST" onsubmit="return confirm('确定要删除此分类及其下所有链接吗？');">
+                        <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium transition">删除分类</button>
+                    </form>
+                </div>
+                <ul class="divide-y divide-gray-200">
+                    {% for link in category.links %}
+                    <li class="px-6 py-4 flex items-center justify-between hover:bg-blue-50/50 transition duration-150">
+                        <div class="flex items-center">
+                            <i class="{{ link.icon or 'fas fa-globe' }} text-blue-400 mr-3 w-6 text-center"></i>
+                            <div>
+                                <p class="text-sm font-bold text-indigo-600 truncate"><a href="{{ link.url }}" target="_blank">{{ link.title }}</a></p>
+                                <p class="text-sm text-gray-500 truncate">{{ link.description }}</p>
+                            </div>
+                        </div>
+                        <form action="{{ url_for('delete_link', id=link.id) }}" method="POST" onsubmit="return confirm('确定要删除此链接吗？');">
+                            <button type="submit" class="ml-4 text-gray-400 hover:text-red-500 transition">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
