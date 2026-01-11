@@ -3,7 +3,7 @@ from urllib.parse import quote_plus
 
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from config import Config, read_setup_config, write_setup_config
+from config import Config, read_setup_config, update_setup_config
 from models import db, User, Link, Category, SiteConfig
 from datetime import datetime
 
@@ -38,6 +38,9 @@ def apply_config(config_data: dict, reinit_db=False):
                 db.init_app(app)
 
     app.config['SETUP_COMPLETED'] = bool(config_data.get('setup_completed'))
+    admin_id = config_data.get('admin_user_id')
+    if admin_id:
+        app.config['SETUP_ADMIN_ID'] = admin_id
     return config_data
 
 
@@ -200,23 +203,22 @@ def setup():
             with app.app_context():
                 db.create_all()
                 ensure_default_categories()
-                existing_admin = User.query.filter_by(username=admin_username).first()
-                if not existing_admin:
+                admin_user = User.query.filter_by(username=admin_username).first()
+                if not admin_user:
                     admin_user = User(username=admin_username)
-                    admin_user.set_password(admin_password)
                     db.session.add(admin_user)
-                else:
-                    existing_admin.set_password(admin_password)
+                admin_user.set_password(admin_password)
                 db.session.commit()
         except Exception as exc:
             apply_saved_setup(reinit_db=True)
             flash(f'初始化失败：{exc}', 'error')
             return render_template('setup.html', form_data=form_data)
 
-        write_setup_config({
+        update_setup_config({
             'secret_key': temp_secret,
             'database_url': database_url,
-            'setup_completed': True
+            'setup_completed': True,
+            'admin_user_id': admin_user.id
         })
         apply_saved_setup(reinit_db=True)
         flash('安装完成，请使用管理员账户登录。', 'success')
@@ -275,6 +277,11 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and user.check_password(password):
+            setup_data = read_setup_config()
+            admin_id = setup_data.get('admin_user_id')
+            if admin_id and user.id != admin_id:
+                flash('仅允许首次创建的管理员账户登录', 'error')
+                return render_template('login.html')
             login_user(user)
             return redirect(url_for('dashboard'))
         flash('用户名或密码错误', 'error')

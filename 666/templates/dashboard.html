@@ -84,6 +84,27 @@
                     </div>
                     <button type="submit" class="w-full bg-emerald-600 text-white py-2 px-4 rounded-lg hover:bg-emerald-700 transition shadow-md">更新设置</button>
                 </form>
+
+                <h3 class="text-lg font-bold text-gray-900 mt-8 mb-4 border-b pb-2 bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">管理员账户</h3>
+                <form action="{{ url_for('update_admin_info') }}" method="POST" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">当前密码</label>
+                        <input type="password" name="current_password" placeholder="请输入当前密码" required class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">新用户名</label>
+                        <input type="text" name="new_username" value="{{ current_user.username }}" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">新密码</label>
+                        <input type="password" name="new_password" placeholder="留空保持现有密码" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">确认新密码</label>
+                        <input type="password" name="confirm_password" placeholder="再次输入新密码" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-white/50">
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition shadow-md">更新管理员账户</button>
+                </form>
             </div>
         </div>
 
